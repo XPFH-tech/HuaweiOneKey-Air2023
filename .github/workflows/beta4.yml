@@ -1,0 +1,63 @@
+name: Air2023 0.4 Beta
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['beta4/**', '.github/workflows/beta4.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: fanyantao4110/HuaweiOneKeyOptimizer
+          ref: 8e6acf3b2b56a3cbadde9d6c8f7265e4254669a9
+          path: upstream
+          persist-credentials: false
+      - run: python3 beta4/prepare.py upstream
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+      - name: Build and verify isolated beta
+        run: |
+          set -euo pipefail
+          export ANDROID_SDK="$ANDROID_HOME"
+          export ANDROID_JAR="$ANDROID_HOME/platforms/android-34/android.jar"
+          export BUILD_TOOLS="$ANDROID_HOME/build-tools/34.0.0"
+          export PATH="$BUILD_TOOLS:$PATH"
+          cd upstream/lsp-app/build
+          rm -rf dex2
+          rm -f ../onekey.jks
+          python3 aar_resolve.py
+          sh 02_apk.sh
+          "$BUILD_TOOLS/apksigner" verify --verbose ../dist/HuaweiOneKeyOptimizer.apk
+      - name: Verify package and collect
+        run: |
+          set -euo pipefail
+          mkdir -p output-beta
+          apk=output-beta/HuaweiOneKey-Air2023-0.4-Beta.apk
+          cp upstream/lsp-app/dist/HuaweiOneKeyOptimizer.apk "$apk"
+          "$ANDROID_HOME/build-tools/34.0.0/aapt2" dump badging "$apk" > output-beta/manifest.txt
+          grep -F "package: name='dev.air2023.onekeybeta4' versionCode='40' versionName='0.4-beta'" output-beta/manifest.txt
+          unzip -p "$apk" assets/xposed_init | grep -Fx 'dev.air2023.onekeybeta4.Entry'
+          cp upstream/LICENSE output-beta/UPSTREAM-LICENSE.txt
+          cp beta4/README.md output-beta/
+          git rev-parse HEAD > output-beta/build-commit.txt
+          git -C upstream rev-parse HEAD > output-beta/upstream-commit.txt
+          (cd output-beta && sha256sum *.apk > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HuaweiOneKey-Air2023-0.4-Beta
+          path: output-beta/
+          if-no-files-found: error
+          retention-days: 7
