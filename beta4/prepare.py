@@ -50,6 +50,6 @@ s=manifest.read_text().replace("dev.air2023.onekeybeta",pkg).replace('versionCod
 manifest.write_text(s,encoding="utf-8")
 (app/"assets/xposed_init").write_text(pkg+".Entry\n",encoding="utf-8")
 ET.parse(manifest)
-assert len(list(java.rglob("*.java")))==17, [p.name for p in java.rglob("*.java")]
+assert len(list(java.rglob("*.java")))==18, [p.name for p in java.rglob("*.java")]
 assert not any(p.name in {"ThemeHooks.java","MxxHooks.java","RootShell.java","HookBadge.java","HookRoProp.java"} for p in java.rglob("*.java"))
 print("B04 allowlist and package verified")
