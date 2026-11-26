@@ -1,0 +1,5 @@
+# Air2023 Settings Preview 0.2
+
+Independent package dev.air2023.onekeypreview. Only com.android.settings main process may be hooked, and only when model DBY2-W00 and a build string containing 4.2.0.252 match. Exact class, method, preference and stock entry values are required; otherwise skip. No theme hooks, system_server hooks, installation bypass, root shell commands, Magisk packaging, or deployment. This is an experimental one-feature preview, not a full port. Disable old module's Settings scope to avoid overlap before testing; do not uninstall the original app just to test this separate package. The preview uses a new ephemeral signing key per build, so future preview upgrades may require uninstalling this preview first. Device and Vector compatibility remain unverified.
+
+Concept derived from upstream MIT-licensed HuaweiOneKeyOptimizer SystemTimeoutHooks, pinned to 8e6acf3b2b56a3cbadde9d6c8f7265e4254669a9; Xposed compilation stubs are used only during build, not packaged.
