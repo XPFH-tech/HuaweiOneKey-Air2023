@@ -14,7 +14,7 @@ javac -encoding UTF-8 -source 8 -target 8 -bootclasspath "$AJ" -cp "$TMP/stubs" 
 find "$TMP/classes" -name '*.class' > "$TMP/classes.txt"
 "$BT/d8" --min-api 26 --lib "$AJ" --classpath "$TMP/stubs" --output "$TMP/dex" @"$TMP/classes.txt"
 "$BT/aapt2" compile --dir "$SRC/res" -o "$TMP/res.zip"
-"$BT/aapt2" link -I "$AJ" --manifest "$SRC/AndroidManifest.xml" -R "$TMP/res.zip" -A "$SRC/assets" --min-sdk-version 26 --target-sdk-version 33 -o "$TMP/base.apk"
+"$BT/aapt2" link -I "$AJ" --manifest "$SRC/AndroidManifest.xml" -R "$TMP/res.zip" --auto-add-overlay -A "$SRC/assets" --min-sdk-version 26 --target-sdk-version 33 -o "$TMP/base.apk"
 (cd "$TMP/dex" && zip -q "$TMP/base.apk" classes*.dex)
 "$BT/zipalign" -f 4 "$TMP/base.apk" "$TMP/aligned.apk"
 keytool -genkeypair -keystore "$TMP/test.jks" -alias preview -storepass preview123 -keypass preview123 -keyalg RSA -keysize 2048 -validity 365 -dname "CN=Air2023 Preview" >/dev/null 2>&1
