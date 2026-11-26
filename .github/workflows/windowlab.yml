@@ -1,0 +1,30 @@
+name: Air2023 WindowLab D1
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['windowlab/**', '.github/workflows/windowlab.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+      - run: bash windowlab/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Air2023-WindowLab-D1
+          path: output-windowlab/
+          if-no-files-found: error
+          retention-days: 7
