@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.air2023.themeprobe1" android:versionCode="101" android:versionName="1.0-T1">
+    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="33"/>
+    <queries><package android:name="com.huawei.android.thememanager"/></queries>
+    <application android:label="Air2023 主题兼容检测 T1" android:allowBackup="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity>
+        <meta-data android:name="xposedmodule" android:value="true"/>
+        <meta-data android:name="xposeddescription" android:value="Read-only theme compatibility diagnostics; theme app only"/>
+        <meta-data android:name="xposedminversion" android:value="82"/>
+        <meta-data android:name="xposedscope" android:resource="@array/xposed_scope"/>
+    </application>
+</manifest>
