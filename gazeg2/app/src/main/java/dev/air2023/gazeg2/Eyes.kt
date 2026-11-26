@@ -55,15 +55,15 @@ class Gate(private val c:Calibration,private val dwell:Long) {
         if(f.time<=last)return false
         if(last>=0&&f.time-last>500)reset()
         last=f.time
-        if(now<cool){state="冷却";return false}
+        if(now<cool){state="翻页冷却中";return false}
         if(!initialized){iris=f.iris*c.sign;ear=f.ear;horizontal=f.horizontal*c.horizontalSign;initialized=true}else{iris=0.35f*f.iris*c.sign+0.65f*iris;ear=0.30f*f.ear+0.70f*ear;horizontal=0.45f*f.horizontal*c.horizontalSign+0.55f*horizontal}
         if(armed>=0&&now-armed>6500){reset();return false}
         if(armed<0){
             state=if(c.dual)"阅读中 · 等待右页底部" else "阅读中"
-            if(ear<=c.bottomGate&&iris>c.topGate&&(!c.dual||horizontal>=c.rightGate)){if(bottom<0)bottom=now;if(now-bottom>=dwell){armed=now;state=if(c.dual)"右页已读完 · 看向左上" else "已读到底部 · 抬眼翻页"}}else bottom=-1
+            if(ear<=c.bottomGate&&iris>c.topGate&&(!c.dual||horizontal>=c.rightGate)){if(bottom<0)bottom=now;state=if(c.dual)"检测到右页底部 · 请停留" else "检测到页面底部 · 请停留";if(now-bottom>=dwell){armed=now;state=if(c.dual)"右页已读完 · 看向左上" else "已读到底部 · 抬眼翻页"}}else bottom=-1
         }else{
             state=if(c.dual)"右页已读完 · 看向左上" else "已读到底部 · 抬眼翻页"
-            if(iris<=c.topGate&&f.ear>c.blinkGate&&(!c.dual||horizontal<=c.leftGate)){if(top<0)top=now;if(now-top>=dwell){reset();cool=now+1800;state="冷却";return true}}else top=-1
+            if(iris<=c.topGate&&f.ear>c.blinkGate&&(!c.dual||horizontal<=c.leftGate)){if(top<0)top=now;state=if(c.dual)"检测到左上 · 正在确认" else "检测到抬眼 · 正在确认";if(now-top>=dwell){reset();cool=now+1800;state="冷却";return true}}else top=-1
         }
         return false
     }

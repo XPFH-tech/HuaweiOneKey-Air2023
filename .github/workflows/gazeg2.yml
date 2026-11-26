@@ -1,4 +1,4 @@
-name: Air2023 Gaze G2
+name: Air2023 Gaze G2R1
 on:
   workflow_dispatch:
   push:
@@ -43,10 +43,10 @@ jobs:
       - name: Verify and collect
         run: |
           mkdir -p output-gazeg2
-          cp gazeg2/app/build/outputs/apk/debug/app-debug.apk output-gazeg2/Air2023-Gaze-G2.apk
+          cp gazeg2/app/build/outputs/apk/debug/app-debug.apk output-gazeg2/Air2023-Gaze-G2R1.apk
           BT="$ANDROID_HOME/build-tools/35.0.0"
-          "$BT/apksigner" verify --verbose output-gazeg2/Air2023-Gaze-G2.apk
-          "$BT/aapt2" dump badging output-gazeg2/Air2023-Gaze-G2.apk > output-gazeg2/manifest.txt
+          "$BT/apksigner" verify --verbose output-gazeg2/Air2023-Gaze-G2R1.apk
+          "$BT/aapt2" dump badging output-gazeg2/Air2023-Gaze-G2R1.apk > output-gazeg2/manifest.txt
           grep -F "package: name='dev.air2023.gazeg2'" output-gazeg2/manifest.txt
           cp gazeg2/README.md gazeg2/NOTICE.md output-gazeg2/
           cp -r gazeg2/licenses output-gazeg2/
@@ -54,7 +54,7 @@ jobs:
           (cd output-gazeg2 && sha256sum *.apk > SHA256SUMS.txt)
       - uses: actions/upload-artifact@v4
         with:
-          name: Air2023-Gaze-G2
+          name: Air2023-Gaze-G2R1
           path: output-gazeg2/
           if-no-files-found: error
           retention-days: 7

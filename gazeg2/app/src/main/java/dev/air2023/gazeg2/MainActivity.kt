@@ -41,7 +41,7 @@ class MainActivity:Activity(){
                 }
             }
         }else if(::status.isInitialized){
-            status.text=Session.status+"\n方向："+rotation(this@MainActivity)+" | 无障碍："+(if(FlipService.current!=null)"已连接" else "未连接")+"\n"+(if(f?.valid==true&&now-f.time<500)"上下 %.3f · 左右 %.3f · EAR %.3f".format(f.iris,f.horizontal,f.ear) else "未检测到有效单人脸")+"\n成功手势："+Session.count+" | 本方向校准："+(if(load()!=null)"有效" else "未校准")+"\n帧数："+Session.validCount+"/"+Session.frameCount+"\n"+Session.diagnostic+"\n手势测试："+Session.testResult
+            status.text=Session.status+"\n方向："+rotation(this@MainActivity)+" | 无障碍："+(if(FlipService.current!=null)"已连接" else "未连接")+"\n"+(if(f?.valid==true&&now-f.time<500)"上下 %.3f · 左右 %.3f · EAR %.3f".format(f.iris,f.horizontal,f.ear) else "未检测到有效单人脸")+"\n眼动触发："+Session.triggerCount+" | 完成手势："+Session.count+" | 本方向校准："+(if(load()!=null)"有效" else "未校准")+"\n帧数："+Session.validCount+"/"+Session.frameCount+"\n"+Session.diagnostic+"\n最近动作："+Session.lastAction+"\n手势测试："+Session.testResult
         }
         h.postDelayed(this,120)
     }}
@@ -51,7 +51,7 @@ class MainActivity:Activity(){
         val p=LinearLayout(this);p.orientation=1;p.setPadding(24,24,24,24)
         fun text(s:String,size:Float=15f):TextView=TextView(this).apply{text=s;textSize=size;p.addView(this)}
         fun button(s:String,action:()->Unit){p.addView(Button(this).apply{text=s;setOnClickListener{action()}})}
-        text("Air2023 眼动翻页 G2",25f)
+        text("Air2023 眼动翻页 G2R1",25f)
         text("仅前置相机、本地计算。横竖屏单独校准；仅指定的全屏阅读应用发送手势。切换方向、锁屏、过热或45分钟自动停止。")
         status=text(Session.status,17f)
         button("1. 启用眼动翻页无障碍服务"){startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))}
@@ -72,11 +72,11 @@ class MainActivity:Activity(){
         dwellLabel=text("");dwell=SeekBar(this);dwell.max=12;dwell.progress=((prefs.getLong("dwell",550)-350)/100).toInt().coerceIn(0,12);p.addView(dwell)
         fun update(){dwellLabel.text="驻留时间："+(350+dwell.progress*100)+" ms（底部及顶部各一次）"}
         dwell.setOnSeekBarChangeListener(object:SeekBar.OnSeekBarChangeListener{override fun onProgressChanged(s:SeekBar?,n:Int,u:Boolean){update()};override fun onStartTrackingTouch(s:SeekBar?){};override fun onStopTrackingTouch(s:SeekBar?){}});update()
-        val show=CheckBox(this).apply{text="阅读时显示非触摸状态提示";isChecked=prefs.getBoolean("overlay",true);setOnCheckedChangeListener{_,b->Session.overlay=b;prefs.edit().putBoolean("overlay",b).apply()}};p.addView(show);Session.overlay=show.isChecked
+        val show=CheckBox(this).apply{text="阅读时显示文字提示（触发/完成/失败）";isChecked=prefs.getBoolean("overlay",true);setOnCheckedChangeListener{_,b->Session.overlay=b;prefs.edit().putBoolean("overlay",b).apply()}};p.addView(show);Session.overlay=show.isChecked
         button("独立手势测试（无需校准）"){
             if(!Session.running||FlipService.current==null){toast("请先启动相机服务并启用无障碍");return@button}
             val name=targetName()?:return@button
-            Session.enabled=false;Session.target=name;Session.gesture=gestures.selectedItemPosition;Session.testResult="等待目标应用";val now=SystemClock.elapsedRealtime();Session.testAfter=now+3000;Session.testUntil=now+20000;Session.note("TEST_ARMED "+name);toast("20秒内进入目标阅读页，只发送一次手势")
+            Session.clearFeedback();Session.enabled=false;Session.target=name;Session.gesture=gestures.selectedItemPosition;Session.testResult="等待目标应用";val now=SystemClock.elapsedRealtime();Session.testAfter=now+3000;Session.testUntil=now+20000;Session.note("TEST_ARMED "+name);toast("20秒内进入目标阅读页，只发送一次手势")
         }
         button("4. 启用翻页，然后打开目标阅读 App"){
             val c=load();val name=targetName()?:return@button
@@ -85,16 +85,16 @@ class MainActivity:Activity(){
             prefs.edit().putString("pkg",name).putInt("gesture",Session.gesture).putLong("dwell",Session.dwell).apply()
             Session.enabled=true;toast("已启用，手动进入指定全屏阅读应用")
         }
-        button("暂停翻页（保持相机）"){Session.enabled=false;Session.testUntil=0;FlipService.current?.hideHint()}
-        button("停止相机与翻页"){Session.testUntil=0;Session.enabled=false;stopService(Intent(this,TrackingService::class.java))}
-        button("复制 G2 诊断报告"){val report="G2_REPORT\n"+status.text+"\n"+Session.report();(getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager).setPrimaryClip(android.content.ClipData.newPlainText("G2",report));toast("已复制")}
+        button("暂停翻页（保持相机）"){Session.clearFeedback();Session.enabled=false;Session.testUntil=0;FlipService.current?.hideHint()}
+        button("停止相机与翻页"){Session.clearFeedback();Session.testUntil=0;Session.enabled=false;stopService(Intent(this,TrackingService::class.java))}
+        button("复制 G2R1 诊断报告"){val report="G2R1_REPORT\n"+status.text+"\n"+Session.report();(getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager).setPrimaryClip(android.content.ClipData.newPlainText("G2",report));toast("已复制")}
         text("提示：固定平板，约30–60cm，正常读到底部并停留，再抬眼到顶部。不同方向需分别校准；不支持小窗、分屏。可随时从通知栏停止。")
         val sc=ScrollView(this);sc.addView(p);setContentView(sc)
     }
     private fun targetName():String?{val name=pkg.text.toString().trim();if(!name.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+"))||name==packageName||name.startsWith("com.android.")||name.startsWith("com.huawei.android.")){toast("请输入阅读应用包名");return null};return name}
     private fun begin(){
         if(!Session.running){toast("请先开启摄像头");return}
-        Session.testUntil=0;Session.enabled=false;calibrating=true;calRot=rotation(this);dual=layouts.selectedItemPosition==1;prefs.edit().putInt("layout"+calRot,if(dual)1 else 0).apply();stage=0;med.clear()
+        Session.clearFeedback();Session.testUntil=0;Session.enabled=false;calibrating=true;calRot=rotation(this);dual=layouts.selectedItemPosition==1;prefs.edit().putInt("layout"+calRot,if(dual)1 else 0).apply();stage=0;med.clear()
         val p=FrameLayout(this);calPanel=p;p.setBackgroundColor(Color.rgb(18,20,24))
         target=TextView(this).apply{text="●";textSize=48f;setTextColor(Color.GREEN);gravity=Gravity.CENTER}
         prompt=TextView(this).apply{setTextColor(Color.WHITE);textSize=16f;gravity=Gravity.CENTER}

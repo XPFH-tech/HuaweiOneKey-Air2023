@@ -5,7 +5,7 @@ plugins {
 android {
  namespace = "dev.air2023.gazeg2"
  compileSdk = 35
- defaultConfig { applicationId = "dev.air2023.gazeg2"; minSdk = 31; targetSdk = 33; versionCode = 2; versionName = "1.1-G2"; ndk { abiFilters += "arm64-v8a" } }
+ defaultConfig { applicationId = "dev.air2023.gazeg2"; minSdk = 31; targetSdk = 33; versionCode = 3; versionName = "1.2-G2R1"; ndk { abiFilters += "arm64-v8a" } }
  compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
  kotlinOptions { jvmTarget = "17" }
 }
