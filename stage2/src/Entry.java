@@ -21,8 +21,11 @@ public final class Entry implements IXposedHookLoadPackage {
         java.util.Collections.synchronizedSet(new java.util.HashSet<String>());
     private static void report(String message) {
         if (!reported.add(message)) return;
-        Log.i(TAG,message);
         try { XposedBridge.log("["+TAG+"] "+message); } catch(Throwable ignored) {}
+        try { Log.i(TAG,message); } catch(Throwable ignored) {}
+    }
+    public Entry() {
+        report("R3_ENTRY_CONSTRUCTED: pid="+android.os.Process.myPid());
     }
     static boolean target() {
         String build = Build.DISPLAY + " " + Build.VERSION.INCREMENTAL;
@@ -30,6 +33,8 @@ public final class Entry implements IXposedHookLoadPackage {
             && build.matches("(?s).*4\\.2\\.0\\.252(?![0-9]).*");
     }
     @Override public void handleLoadPackage(XC_LoadPackage.LoadPackageParam p) {
+        report("R3_LOAD_CALLBACK: package="+(p==null?"null":p.packageName)
+            +"; process="+(p==null?"null":p.processName)+"; pid="+android.os.Process.myPid());
         if (p == null || !"com.android.settings".equals(p.packageName)) return;
         report("Settings callback: process="+p.processName+"; model="+Build.MODEL
             +"; display="+Build.DISPLAY+"; incremental="+Build.VERSION.INCREMENTAL);
@@ -43,21 +48,22 @@ public final class Entry implements IXposedHookLoadPackage {
             Class<?> pref = Class.forName("androidx.preference.ListPreference",false,p.classLoader);
             Field field = c.getDeclaredField("mScreenTimeoutPreference");
             field.setAccessible(true);
-            Method method;
-            try { method = c.getDeclaredMethod("setScreenTimeoutEntriesAndArrow"); }
-            catch(NoSuchMethodException missing) {
-                for (Method candidate : c.getDeclaredMethods()) {
-                    if ("setScreenTimeoutEntriesAndArrow".equals(candidate.getName()))
-                        report("CANDIDATE_METHOD: "+candidate.toGenericString());
-                }
-                throw missing;
+            // Upstream's working implementation hooks methods by name rather
+            // than assuming a zero-argument signature. Keep instance/void guards.
+            java.util.List<Method> methods = new java.util.ArrayList<Method>();
+            for (Method candidate : c.getDeclaredMethods()) {
+                if (!"setScreenTimeoutEntriesAndArrow".equals(candidate.getName())) continue;
+                report("CANDIDATE_METHOD: "+candidate.toGenericString());
+                int mod = candidate.getModifiers();
+                if (candidate.getReturnType()==void.class
+                    && !java.lang.reflect.Modifier.isStatic(mod)
+                    && !java.lang.reflect.Modifier.isAbstract(mod)) methods.add(candidate);
             }
-            if (method.getReturnType() != void.class) throw new NoSuchMethodException("Unexpected return type");
-            report("MATCH_METHOD: "+method.toGenericString());
+            if (methods.isEmpty()) throw new NoSuchMethodException("No supported instance void overload");
             Method ge = pref.getMethod("getEntries"), gv = pref.getMethod("getEntryValues");
             Method se = pref.getMethod("setEntries",CharSequence[].class);
             Method sv = pref.getMethod("setEntryValues",CharSequence[].class);
-            XposedBridge.hookMethod(method,new XC_MethodHook(){
+            XC_MethodHook callback = new XC_MethodHook(){
                 @Override protected void afterHookedMethod(MethodHookParam mp) {
                     report("CALLBACK: original Settings method returned");
                     if (mp.getThrowable()!=null) { report("SKIP_ORIGINAL_EXCEPTION: "+mp.getThrowable().getClass().getName()); return; }
@@ -94,8 +100,16 @@ public final class Entry implements IXposedHookLoadPackage {
                         report("APPLIED: preview timeout entries installed");
                     } catch(Throwable t) { report("CALLBACK_ERROR: "+t.getClass().getName()+": "+t.getMessage()); Log.w(TAG,"Timeout UI unchanged or restored",t); }
                 }
-            });
-            report("HOOK_INSTALLED: Settings-only preview");
+            };
+            int count=0;
+            for (Method method : methods) {
+                try {
+                    XposedBridge.hookMethod(method,callback);
+                    count++;
+                    report("MATCH_METHOD: "+method.toGenericString());
+                } catch(Throwable t) { report("OVERLOAD_ERROR: "+method.toGenericString()+"; "+t); }
+            }
+            report(count>0?"HOOK_INSTALLED: Settings-only preview; methods="+count:"HOOK_ERROR: no overload installed");
         } catch(Throwable t) { report("HOOK_ERROR: "+t.getClass().getName()+": "+t.getMessage()); Log.w(TAG,"Target method unsupported; skipped",t); }
     }
 }
