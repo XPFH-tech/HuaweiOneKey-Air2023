@@ -47,8 +47,8 @@ public final class MainActivity extends Activity {
    status=label("",14,false);
    updateStatus(ok);
    label("迁移与安全检查",18,true);
-   button("迁移检查 / 导入 U1 开关",new View.OnClickListener(){public void onClick(View v){startActivity(new Intent(MainActivity.this,MigrationActivity.class));}});
-   label("先备份重要分身数据，完成迁移检查（确认原 C4R1 名单可读），不要重新扫描或覆盖名单。首次启用 U2：Vector 勾选设置、华为桌面、系统用户界面、系统框架。强停 U2 应用再打开，导入或手动配置并发布；停用旧 U1 与 C4R1 的全部作用域，再手动软重启。切换中不要打开分身设置；不要在两套模块同时启用时重启。",14,false);
+   button("迁移检查 / 导入 U1 开关",new View.OnClickListener(){public void onClick(View v){startActivityForResult(new Intent(MainActivity.this,MigrationActivity.class),21);}});
+   label("先备份重要分身数据，完成迁移检查（确认原 C4R1 名单可读），不要重新扫描或覆盖名单。名单检查通过后，在 Vector 停用旧 U1 与 C4R1，立即启用 U2 四个作用域（设置、华为桌面、系统用户界面、系统框架）。中途不要重启。强停 U2 应用再打开，导入或手动配置并发布，再手动软重启。切换中不要打开分身设置；不要在两套模块同时启用时重启。",14,false);
    button("发布 / 重新写入共享配置",new View.OnClickListener(){public void onClick(View v){shared=true;boolean success=initialize(true);updateStatus(success);Toast.makeText(MainActivity.this,success?"配置已写入，需日志确认共享读取":"共享模式或写入未确认，请先启用 Vector 后重开应用",Toast.LENGTH_LONG).show();}});
    section("基础优化 · v0.4","base","休眠时长、桌面、状态栏秒数等。设置沿用 v0.4 内核，可通过迁移页手动导入 U1 开关。");
    button("基础优化设置",new View.OnClickListener(){public void onClick(View v){startActivity(new Intent(MainActivity.this,BaseActivity.class));}});
@@ -73,6 +73,7 @@ public final class MainActivity extends Activity {
    label("日志：Air2023U2 / U2_CONFIG_OK；各功能保留 Air2023B04、Air2023VolumeV1、Air2023IslandI4 标签。配置不可读时跳过三组基础 Hook（分身独立）。",13,false);
    ScrollView scroll=new ScrollView(this);scroll.addView(body);setContentView(scroll);
  }
+ @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==21&&result==RESULT_OK)recreate();}
  private void updateStatus(boolean ok){status.setText(ok?"配置通道：框架允许共享模式；实际读取以 U2_CONFIG_OK 为准。":"配置通道：私有模式或保存失败；先启用模块、强停 U2 并重新打开，再发布。");}
  private TextView label(String text,int size,boolean bold){TextView t=new TextView(this);t.setText(text);t.setTextSize(size);if(bold)t.setTypeface(null,Typeface.BOLD);t.setPadding(0,dp(6),0,dp(6));body.addView(t);return t;}
  private void button(String text,View.OnClickListener l){Button b=new Button(this);b.setAllCaps(false);b.setText(text);b.setOnClickListener(l);body.addView(b);}
