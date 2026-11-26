@@ -25,7 +25,7 @@ public final class Entry implements IXposedHookLoadPackage {
         try { Log.i(TAG,message); } catch(Throwable ignored) {}
     }
     public Entry() {
-        report("R3_ENTRY_CONSTRUCTED: pid="+android.os.Process.myPid());
+        report("R4_ENTRY_CONSTRUCTED: pid="+android.os.Process.myPid());
     }
     static boolean target() {
         String build = Build.DISPLAY + " " + Build.VERSION.INCREMENTAL;
@@ -33,7 +33,7 @@ public final class Entry implements IXposedHookLoadPackage {
             && build.matches("(?s).*4\\.2\\.0\\.252(?![0-9]).*");
     }
     @Override public void handleLoadPackage(XC_LoadPackage.LoadPackageParam p) {
-        report("R3_LOAD_CALLBACK: package="+(p==null?"null":p.packageName)
+        report("R4_LOAD_CALLBACK: package="+(p==null?"null":p.packageName)
             +"; process="+(p==null?"null":p.processName)+"; pid="+android.os.Process.myPid());
         if (p == null || !"com.android.settings".equals(p.packageName)) return;
         report("Settings callback: process="+p.processName+"; model="+Build.MODEL
@@ -72,32 +72,37 @@ public final class Entry implements IXposedHookLoadPackage {
                         if (!pref.isInstance(o)) { report("SKIP_PREFERENCE: "+(o==null?"null":o.getClass().getName())); return; }
                         CharSequence[] entries = (CharSequence[])ge.invoke(o), values = (CharSequence[])gv.invoke(o);
                         report("STOCK_VALUES: "+Arrays.toString(values)+"; entries="+(entries==null?-1:entries.length));
-                        if (entries==null || values==null || entries.length!=7 || values.length!=7) {
-                            report("SKIP_COUNT: expected 7 stock entries"); return;
+                        if (entries==null || values==null || entries.length!=values.length
+                            || (values.length!=6 && values.length!=7)) {
+                            report("SKIP_COUNT: expected 6 or 7 matching stock entries"); return;
                         }
                         for (int i=0;i<BASE.length;i++) if (values[i]==null || !BASE[i].contentEquals(values[i])) {
                             report("SKIP_VALUE: index="+i+" expected="+BASE[i]+" actual="+values[i]); return;
                         }
-                        if (values[6]==null || !Arrays.asList("-1","0","2147483647").contains(values[6].toString())) {
+                        // Air2023 observed six stock choices. Preserve a seventh only if present.
+                        boolean hasNever = values.length==7;
+                        if (hasNever && (values[6]==null || !Arrays.asList("-1","0","2147483647").contains(values[6].toString()))) {
                             report("SKIP_FINAL_VALUE: "+values[6]); return;
                         }
                         if (entries[5]==null || !entries[5].toString().contains("10")) {
                             report("SKIP_LABEL: expected stock ten-minute label"); return;
                         }
-                        CharSequence[] e = new CharSequence[10], v = new CharSequence[10];
-                        System.arraycopy(entries,0,e,0,6); System.arraycopy(values,0,v,0,6);
+                        CharSequence[] e = new CharSequence[entries.length+EXTRA.length];
+                        CharSequence[] v = new CharSequence[values.length+EXTRA.length];
+                        System.arraycopy(entries,0,e,0,BASE.length);
+                        System.arraycopy(values,0,v,0,BASE.length);
                         int[] minutes={20,30,60};
-                        for(int i=0;i<3;i++) {
-                            e[6+i]=entries[5].toString().replace("10",Integer.toString(minutes[i]));
-                            v[6+i]=EXTRA[i];
+                        for(int i=0;i<EXTRA.length;i++) {
+                            e[BASE.length+i]=entries[5].toString().replace("10",Integer.toString(minutes[i]));
+                            v[BASE.length+i]=EXTRA[i];
                         }
-                        e[9]=entries[6]; v[9]=values[6];
+                        if (hasNever) { e[9]=entries[6]; v[9]=values[6]; }
                         try { se.invoke(o,(Object)e); sv.invoke(o,(Object)v); }
                         catch(Throwable t) {
                             try { se.invoke(o,(Object)entries); sv.invoke(o,(Object)values); } catch(Throwable restore) { Log.w(TAG,"Restore failed",restore); }
                             throw t;
                         }
-                        report("APPLIED: preview timeout entries installed");
+                        report("R4_APPLIED: "+values.length+" -> "+v.length+"; values="+Arrays.toString(v));
                     } catch(Throwable t) { report("CALLBACK_ERROR: "+t.getClass().getName()+": "+t.getMessage()); Log.w(TAG,"Timeout UI unchanged or restored",t); }
                 }
             };
