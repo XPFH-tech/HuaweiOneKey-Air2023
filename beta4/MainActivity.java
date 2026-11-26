@@ -36,14 +36,14 @@ public final class MainActivity extends AppCompatActivity {
         safe.setText("安全模式：关闭所有 Hook（下次加载）");
         safe.setChecked(prefs.getBoolean("safe",false));
         add(safe);
-        safe.setOnCheckedChangeListener((v,checked)->save("safe",checked));
+        safe.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){ public void onCheckedChanged(CompoundButton v,boolean checked){save("safe",checked);} });
         for(int i=0;i<KEYS.length;i++){
             final String key=KEYS[i];
             MaterialSwitch sw=new MaterialSwitch(this);
             sw.setText(NAMES[i]+(i<3?" · v0.3 已验证":" · 实验"));
             sw.setChecked(prefs.getBoolean(key,false));
             add(sw);
-            sw.setOnCheckedChangeListener((v,checked)->save(key,checked));
+            sw.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){ public void onCheckedChanged(CompoundButton v,boolean checked){save(key,checked);} });
         }
         TextView radius=new TextView(this);
         radius.setText("模糊半径："+prefs.getInt("radius",46));
@@ -59,11 +59,11 @@ public final class MainActivity extends AppCompatActivity {
         MaterialButton reset=new MaterialButton(this);
         reset.setText("恢复 v0.3 三项功能配置");
         add(reset);
-        reset.setOnClickListener(v->{
+        reset.setOnClickListener(new View.OnClickListener(){ public void onClick(View v){
             SharedPreferences.Editor ed=prefs.edit().putBoolean("safe",false).putInt("radius",46);
             for(int i=0;i<KEYS.length;i++)ed.putBoolean(KEYS[i],i<3);
             saved(ed.commit());recreate();
-        });
+        }});
         TextView pending=new TextView(this);
         pending.setText("尚未移植：控制中心音量条、灵动岛、平行视界、分身、多小窗。保留 v0.3 作为回退。");
         add(pending);

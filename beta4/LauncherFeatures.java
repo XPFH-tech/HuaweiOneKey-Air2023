@@ -14,15 +14,15 @@ final class LauncherFeatures {
     }
     static void install(final ClassLoader cl) {
         final LCfg c=LCfg.load();
-        step("layout",c.cells||c.dedupe,()->HookLayoutCells.install(cl,c));
-        step("drawer",c.drawer,()->HookDrawer.install(cl));
-        step("dock",c.dock,()->HookDockCount.install(cl));
-        step("portrait",c.portrait,()->HookHotseatPortrait.install(cl));
-        step("notext",c.notext,()->HookNoText.install(cl));
-        step("app_details",c.app_details,()->HookAppDetails.install(cl));
-        step("form_title",c.form_title,()->HookFormTitle.install(cl));
+        step("layout",c.cells||c.dedupe,new Step(){ public void run(){ HookLayoutCells.install(cl,c); } });
+        step("drawer",c.drawer,new Step(){ public void run(){ HookDrawer.install(cl); } });
+        step("dock",c.dock,new Step(){ public void run(){ HookDockCount.install(cl); } });
+        step("portrait",c.portrait,new Step(){ public void run(){ HookHotseatPortrait.install(cl); } });
+        step("notext",c.notext,new Step(){ public void run(){ HookNoText.install(cl); } });
+        step("app_details",c.app_details,new Step(){ public void run(){ HookAppDetails.install(cl); } });
+        step("form_title",c.form_title,new Step(){ public void run(){ HookFormTitle.install(cl); } });
         if (HookFlags.enabled("blur",false)&&Build.VERSION.SDK_INT<31) {
             XposedBridge.log("[Air2023B04] BLUR_SKIP_API: "+Build.VERSION.SDK_INT);
-        } else step("blur",HookFlags.enabled("blur",false),()->LauncherBlurHooks.install(cl));
+        } else step("blur",HookFlags.enabled("blur",false),new Step(){ public void run(){ LauncherBlurHooks.install(cl); } });
     }
 }
