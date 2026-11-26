@@ -1,22 +1,22 @@
-# Air2023 眼动阅读 G3
+# GazeReader · 眼动阅读
 
-**1.3-G3 · MatePad Air 2023 横屏双页适配版**
+**1.3-G3 · 首个真机验证版本**
 
-基于 [Raabo/GazeUp](https://github.com/Raabo/GazeUp) 与 [Deep-SkyLabs/gaze-control](https://github.com/Deep-SkyLabs/gaze-control) 的技术思路，针对 MatePad Air 2023 开发的独立眼动翻页工具。使用普通前置摄像头、本地人脸关键点推理及 Android 无障碍手势，无需 Root，不移植华为专有眼动算法。
+基于 [Raabo/GazeUp](https://github.com/Raabo/GazeUp) 与 [Deep-SkyLabs/gaze-control](https://github.com/Deep-SkyLabs/gaze-control) 的技术思路，面向 Android 手机和平板的独立眼动阅读工具，重点支持横屏双页排版，首个验证设备为 MatePad Air 2023。使用普通前置摄像头、本地人脸关键点推理及 Android 无障碍手势，无需 Root，不移植华为专有眼动算法。
 
-## 支持范围
+## 当前版本与已验证设备
 
 | 项目 | 内容 |
 | --- | --- |
-| 设备 | HUAWEI MatePad Air 2023（DBY2-W00） |
+| 已验证设备 | HUAWEI MatePad Air 2023（DBY2-W00） |
 | 测试固件 | HarmonyOS 4.2.0.252(C00E100R3P5)，Android 12 / API 31 |
 | APK | Air2023-Gaze-G3.apk，arm64-v8a |
 | 包名 | dev.air2023.gazeg3 |
 | 版本 | 1.3-G3 / versionCode 4 |
 | 所需权限 | 摄像头、用户手动启用无障碍；相机类型前台服务 |
-| Root / Vector | 不需要，与 U2 独立 |
+| Root / Vector | 不需要 |
 
-程序检查设备型号及 API 31；其他固件和机型未验证。
+**当前 G3 是设备验证版，而不是已开放给所有 Android 设备的通用发行版。** 现有 APK 仍检查 DBY2-W00 与 API 31，其他机型不会启动追踪服务。通用发行版计划用系统版本、前置摄像头与无障碍能力检查取代机型限制，并逐步验证手机、平板的相机与后台服务兼容性。项目独立于华为一键优化，现有 APK 的包名、签名及功能不因文档定位调整而改变。
 
 ## 主要功能
 
@@ -29,7 +29,7 @@
 - 底部非触摸文字提示，眼动触发与手势完成计数、一次性手势测试及复制诊断。
 - 丢脸/闭眼保护、冷却、目标全屏窗口检查；锁屏、方向变化、严重热状态或运行45分钟自动停止。
 
-## 下载
+## 下载（已验证的 G3 版本）
 
 - [云端构建记录](https://github.com/XPFH-tech/HuaweiOneKey-Air2023/actions/runs/45903064405)
 - [G3 下载（ZIP）](https://github.com/XPFH-tech/HuaweiOneKey-Air2023/actions/runs/45903064405/artifacts/15155739520)
@@ -91,6 +91,13 @@ gradle -p gazeg3 --no-daemon :app:testDebugUnitTest :app:assembleDebug
 ## 验证与限制
 
 2026-11-27：G2R1 与 G3 获得项目维护者真机成功反馈；G3 修复后的云端构建成功。尚无逐应用测试矩阵、识别率对照数据或长期续航测试。不支持小窗/分屏，不能可靠区分书架与正文，切换方向须重新启动相机并选择对应校准。弱光、反光、头部移动可能降低识别质量。非官方华为眼动翻页，无红外专用硬件依赖，不承诺与官方功能等效。
+
+## 项目定位与后续兼容计划
+
+- 通用 Android 眼动阅读，不依赖厂商私有接口、Root 或 Xposed。
+- 保留单页、双页及连续滚动的手势配置与方向校准。
+- 后续以能力检查和逐机型验证扩展适配范围，不将尚未测试的设备标为支持。
+- 独立仓库待建立；当前源码及下载记录临时保留于原开发仓库，避免丢失已验证版本。
 
 ## 来源与致谢
 
