@@ -1,0 +1,36 @@
+name: Air2023 Clone C4R1
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['clonec4r1/**', '.github/workflows/clonec4r1.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: fanyantao4110/HuaweiOneKeyOptimizer
+          ref: 8e6acf3b2b56a3cbadde9d6c8f7265e4254669a9
+          path: upstream
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+      - run: bash clonec4r1/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Air2023-Clone-C4R1
+          path: output-clonec4r1/
+          if-no-files-found: error
+          retention-days: 7
