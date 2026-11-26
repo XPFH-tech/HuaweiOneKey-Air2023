@@ -18,9 +18,10 @@ find "$TMP/classes" -name '*.class' > "$TMP/classes.txt"
 (cd "$TMP/dex" && zip -q "$TMP/base.apk" classes*.dex)
 "$BT/zipalign" -f 4 "$TMP/base.apk" "$TMP/aligned.apk"
 keytool -genkeypair -keystore "$TMP/test.jks" -alias preview -storepass preview123 -keypass preview123 -keyalg RSA -keysize 2048 -validity 365 -dname "CN=Air2023 Preview" >/dev/null 2>&1
-OUT="$ROOT/output-stage2/Air2023-Settings-Preview.apk"
+OUT="$ROOT/output-stage2/Air2023-Settings-Preview-R4.apk"
 "$BT/apksigner" sign --ks "$TMP/test.jks" --ks-pass pass:preview123 --key-pass pass:preview123 --out "$OUT" "$TMP/aligned.apk"
 "$BT/apksigner" verify --verbose "$OUT"
 "$BT/aapt2" dump badging "$OUT" > "$ROOT/output-stage2/manifest.txt"
 (cd "$ROOT/output-stage2" && sha256sum *.apk > SHA256SUMS.txt)
 cp "$SRC/README.md" "$ROOT/output-stage2/"
+git -C "$ROOT" rev-parse HEAD > "$ROOT/output-stage2/build-commit.txt"

@@ -1,6 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.air2023.onekeypreview" android:versionCode="2" android:versionName="0.2-preview">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.air2023.onekeypreview" android:versionCode="4" android:versionName="0.2-R4">
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="33"/>
-    <application android:label="Air2023 设置预览" android:allowBackup="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+    <application android:label="Air2023 R4 设置预览" android:allowBackup="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity>
