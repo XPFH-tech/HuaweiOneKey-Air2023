@@ -13,12 +13,28 @@
 | 设备 | HUAWEI MatePad Air 11.5 英寸 2023（DBY2-W00） |
 | 系统 | HarmonyOS 4.2.0.252(C00E100R3P5) |
 | Android | 12 / API 31 |
-| Root 环境 | 临时 Root、Magisk resetprop |
+| Root 环境 | [DBY2 RootKit v2.1](https://github.com/bytehola/dby2-rootkit/releases/tag/v2.1) 提供的临时 Root、Magisk resetprop |
 | 注入框架 | Vector / Zygisk（测试环境 Vector 2.0(1)，API 102） |
 | 当前版本 | 2.0-U2（versionCode 200） |
 | 包名 | `dev.air2023.unified2` |
 
 其他机型、地区版本和固件尚未验证，不建议直接套用。
+
+## Root 来源与调试环境
+
+本项目的临时 Root 来源为 **bytehola** 开发的 [DBY2 RootKit 2.1（v2.1）](https://github.com/bytehola/dby2-rootkit/releases/tag/v2.1)，上游发布日期为 2026-11-26。感谢 bytehola 为 MatePad Air 2023 提供临时 Root 及注入运行环境。本项目基于该方案提供的 Root 环境开展 HarmonyOS 4.2 的适配、调试和真机验证。
+
+根据 RootKit v2.1 的发布说明，其支持 DBY2-W00、HarmonyOS 4.2.0.252(C00E100R3P5)、Android 12 / API 31、内核 5.4.86-qgki，并提供 Magisk、NyaZygisk、Vector 等组件；临时 Root 不跨完整重启保留。
+
+本项目在此类环境下进行的调试包括：
+
+- 通过 ADB、Root 权限检查、Vector 注入日志及进程状态核对目标固件的 Hook 兼容性。
+- 验证 Magisk resetprop 的运行期属性修改与读回，用于多窗上限和最近任务内存显示。
+- 检查原生应用分身白名单、权限和系统框架初始化时机，保留现有分身数据。
+- 读取电池驱动及华为电源诊断接口，验证 B1 电池检测的数据来源。
+- 按独立功能测试、手动软重启、整合验证的顺序开发，避免未验证功能直接进入整合版。
+
+RootKit 是外部运行环境，不是 U2 的组成部分。U2 不包含 Root 引擎、漏洞利用代码或 RootKit 安装包，也不负责获取或恢复 Root。有关 Root 安装、恢复与版本兼容性，请以原项目的发布说明为准。上述调试记录不代表对 RootKit 所有组件、恢复流程或长期稳定性的完整验证。
 
 ## 主要功能
 
@@ -42,7 +58,7 @@
 
 Actions 产物保留 7 天，可能需要登录并具备仓库访问权限。过期后可在 Actions 手动运行 **Air2023 Unified U2** 工作流重新构建；每次构建使用临时测试签名，不能保证覆盖安装。
 
-1. 确认机型和固件一致，已拥有临时 Root 与可用 Vector；备份重要数据，特别是非原厂分身。
+1. 确认机型和固件一致，已通过 [DBY2 RootKit v2.1](https://github.com/bytehola/dby2-rootkit/releases/tag/v2.1) 或经过验证的兼容环境获得临时 Root 与可用 Vector；备份重要数据，特别是非原厂分身。
 2. 解压构建产物并安装 `HuaweiOneKey-Air2023-2.0-U2.apk`。从 U1/C4R1 迁移时先检查旧名单，不要重新同步。
 3. 检查通过后，在 Vector 停用旧 U1/C4R1，立即启用 U2 的四个作用域，中间不要重启或打开分身设置。
 4. 强行停止 U2，再打开；按需导入旧设置或手动配置，点击发布共享配置。
@@ -80,7 +96,7 @@ Actions 产物保留 7 天，可能需要登录并具备仓库访问权限。过
 | CCVolume（上游致谢） | 控制中心音量条的 Hook 与布局参考；V1 重新实现 Java 逻辑 |
 | LiveIsland（上游致谢） | 灵动岛交互及动画思路；I 系列按本机布局逐步实现 |
 | HwLauncherTweak（上游致谢） | 桌面增强功能参考，经 OneKey 上游引入 |
-| [bytehola/dby2-rootkit](https://github.com/bytehola/dby2-rootkit) | MatePad Air 2023 临时 Root 生态相关项目；此处为运行环境致谢，不表示 U2 集成其 Root 引擎或利用代码 |
+| [bytehola / DBY2 RootKit v2.1](https://github.com/bytehola/dby2-rootkit/releases/tag/v2.1) | 本项目实际使用的临时 Root 方案来源与适配调试基础；不集成其 Root 引擎或利用代码 |
 | [Magisk](https://github.com/topjohnwu/Magisk) / Vector / [LSPosed](https://github.com/LSPosed/LSPosed) / Zygisk | 临时 Root、属性操作及运行期注入环境 |
 | XPFH-tech | 目标固件适配、分阶段验证、B1 电池诊断、模块整合与维护 |
 
