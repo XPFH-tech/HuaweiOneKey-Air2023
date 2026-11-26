@@ -65,7 +65,7 @@ class MainActivity:Activity(){
         }
         text("阅读排版")
         layouts=Spinner(this);layouts.adapter=ArrayAdapter(this,android.R.layout.simple_spinner_dropdown_item,arrayOf("单页 / 纵向滚动","横屏双页（左→右）"));layouts.setSelection(prefs.getInt(profileKey(selectedPkg,"layout"),prefs.getInt("layout"+rotation(this),if(resources.configuration.orientation==2)1 else 0)).coerceIn(0,1));p.addView(layouts)
-        edgeBox=CheckBox(this).apply{text="靠边校准（推荐：更偏左上、右下）";isChecked=prefs.getBoolean("edge"+rotation(this),true);setOnCheckedChangeListener{_,v->prefs.edit().putBoolean("edge"+rotation(this),v).apply()}};p.addView(edgeBox)
+        edgeBox=CheckBox(this).apply{text="靠边校准（推荐：更偏左上、右下）";isChecked=prefs.getBoolean("edge"+rotation(this@MainActivity),true);setOnCheckedChangeListener{_,v->prefs.edit().putBoolean("edge"+rotation(this@MainActivity),v).apply()}};p.addView(edgeBox)
         button("3. 当前排版校准（三点 / 五点）"){begin()}
         text("阅读应用 · 从本机选择")
         chosen=text("",18f)
