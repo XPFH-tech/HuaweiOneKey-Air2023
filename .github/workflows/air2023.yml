@@ -1,0 +1,56 @@
+name: Air2023 baseline APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['prepare_baseline.py', '.github/workflows/air2023.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: fanyantao4110/HuaweiOneKeyOptimizer
+          ref: 8e6acf3b2b56a3cbadde9d6c8f7265e4254669a9
+          path: upstream
+          persist-credentials: false
+      - name: Prepare baseline
+        run: python3 prepare_baseline.py upstream
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install SDK
+        run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+      - name: Build experimental APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ANDROID_SDK="$ANDROID_HOME"
+          export ANDROID_JAR="$ANDROID_HOME/platforms/android-34/android.jar"
+          export BUILD_TOOLS="$ANDROID_HOME/build-tools/34.0.0"
+          export PATH="$BUILD_TOOLS:$PATH"
+          cd upstream/lsp-app/build
+          rm -rf dex2
+          python3 aar_resolve.py
+          sh 02_apk.sh
+          "$BUILD_TOOLS/apksigner" verify --verbose ../dist/HuaweiOneKeyOptimizer.apk
+      - name: Collect build-only output
+        run: |
+          mkdir -p output
+          cp upstream/lsp-app/dist/HuaweiOneKeyOptimizer.apk output/Air2023-baseline-TEST.apk
+          cp air2023-baseline.diff output/
+          git -C upstream rev-parse HEAD > output/upstream-commit.txt
+          (cd output && sha256sum *.apk > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Air2023-baseline-TEST
+          path: output/
+          if-no-files-found: error
+          retention-days: 7
