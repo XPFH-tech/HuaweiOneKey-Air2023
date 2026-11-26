@@ -1,0 +1,60 @@
+name: Air2023 Gaze G2
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['gazeg2/**', '.github/workflows/gazeg2.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: Raabo/GazeUp
+          ref: e8e7921198dc9fafe5b132fbe10c0ecc8796e481
+          path: gazeup-upstream
+          persist-credentials: false
+          lfs: true
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Prepare pinned model
+        run: |
+          mkdir -p gazeg2/app/src/main/assets
+          cp gazeup-upstream/app/src/main/assets/face_landmarker.task gazeg2/app/src/main/assets/
+          test "$(stat -c%s gazeg2/app/src/main/assets/face_landmarker.task)" -gt 1000000
+          cp gazeg2/NOTICE.md gazeg2/app/src/main/assets/
+          cp gazeg2/licenses/*.txt gazeg2/app/src/main/assets/
+          cp /usr/share/common-licenses/Apache-2.0 gazeg2/app/src/main/assets/MediaPipe-APACHE-2.0.txt
+      - run: gradle -p gazeg2 --no-daemon :app:testDebugUnitTest :app:assembleDebug
+      - name: Verify and collect
+        run: |
+          mkdir -p output-gazeg2
+          cp gazeg2/app/build/outputs/apk/debug/app-debug.apk output-gazeg2/Air2023-Gaze-G2.apk
+          BT="$ANDROID_HOME/build-tools/35.0.0"
+          "$BT/apksigner" verify --verbose output-gazeg2/Air2023-Gaze-G2.apk
+          "$BT/aapt2" dump badging output-gazeg2/Air2023-Gaze-G2.apk > output-gazeg2/manifest.txt
+          grep -F "package: name='dev.air2023.gazeg2'" output-gazeg2/manifest.txt
+          cp gazeg2/README.md gazeg2/NOTICE.md output-gazeg2/
+          cp -r gazeg2/licenses output-gazeg2/
+          git rev-parse HEAD > output-gazeg2/build-commit.txt
+          (cd output-gazeg2 && sha256sum *.apk > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Air2023-Gaze-G2
+          path: output-gazeg2/
+          if-no-files-found: error
+          retention-days: 7
